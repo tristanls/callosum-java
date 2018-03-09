@@ -1,6 +1,7 @@
 package com.primeaeterna.callosum;
 
 import java.util.Optional;
+import java.util.Queue;
 
 /**
  * The slot manager keeps track of available slots and when asked for next
@@ -9,7 +10,7 @@ import java.util.Optional;
 public class ServerSlots
 {
     private int nextSlot = -1;
-    private PriorityBlockingUniqueQueue<Integer> minQueue = new PriorityBlockingUniqueQueue<Integer>((a, b) -> a - b);
+    private Queue<Integer> minQueue = new PriorityBlockingUniqueQueue<Integer>((a, b) -> a - b);
 
     /**
      * @return next available slot
