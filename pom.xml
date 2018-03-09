@@ -58,9 +58,6 @@
     </dependencies>
 
     <build>
-        <outputDirectory>${basedir}/out/production</outputDirectory>
-        <testOutputDirectory>${basedir}/out/test</testOutputDirectory>
-        <directory>${basedir}/out</directory>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
