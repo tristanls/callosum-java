@@ -1,23 +1,23 @@
-package com.primeaeterna.callosum;
+package com.primeaeterna.callosum.server;
 
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class ServerSlotsTest
+public class SlotsTest
 {
     @Test
     void firstSlotIsZero()
     {
-        ServerSlots slots = new ServerSlots();
+        Slots slots = new Slots();
         assertEquals(0, slots.next());
     }
 
     @Test
     void slotsAreConsecutiveIntegersStartingFromZero()
     {
-        ServerSlots slots = new ServerSlots();
+        Slots slots = new Slots();
         for (int i = 0; i < 1e3; ++i)
         {
             assertEquals(i, slots.next());
@@ -27,7 +27,7 @@ public class ServerSlotsTest
     @Test
     void allotSmallestAvailableSlot()
     {
-        ServerSlots slots = new ServerSlots();
+        Slots slots = new Slots();
         for (int i = 0; i < 1e3; ++i)
         {
             slots.next();
@@ -45,21 +45,21 @@ public class ServerSlotsTest
     @Test
     void returningNegativeSlotResultsInError()
     {
-        ServerSlots slots = new ServerSlots();
+        Slots slots = new Slots();
         assertThrows(InvalidSlot.class, () -> slots.put(-10), "Invalid slot: -10");
     }
 
     @Test
     void returningSlotGreaterThanAnyAllotedSoFarResultsInError()
     {
-        ServerSlots slots = new ServerSlots();
+        Slots slots = new Slots();
         assertThrows(InvalidSlot.class, () -> slots.put(1), "Invalid slot: 1");
     }
 
     @Test
     void returningSlotLessThanOrEqualToAnyAllotedSoFarDoesNotResultInError()
     {
-        ServerSlots slots = new ServerSlots();
+        Slots slots = new Slots();
         assertEquals(0, slots.next());
         assertEquals(1, slots.next());
         assertEquals(2, slots.next());

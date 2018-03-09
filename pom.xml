@@ -11,6 +11,7 @@
     <description>
         Self-balancing distributed services protocol.
     </description>
+    <packaging>pom</packaging>
 
     <properties>
         <java.version>9</java.version>

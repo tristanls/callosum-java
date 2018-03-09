@@ -1,4 +1,4 @@
-package com.primeaeterna.callosum;
+package com.primeaeterna.callosum.server;
 
 public class InvalidSlot extends Error
 {

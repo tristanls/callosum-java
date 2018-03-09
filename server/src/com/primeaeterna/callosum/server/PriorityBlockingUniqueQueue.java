@@ -1,4 +1,4 @@
-package com.primeaeterna.callosum;
+package com.primeaeterna.callosum.server;
 
 import java.util.Comparator;
 import java.util.concurrent.PriorityBlockingQueue;

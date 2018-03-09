@@ -11,15 +11,12 @@
         <version>0.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>server</artifactId>
+    <artifactId>callosum-server</artifactId>
     <version>0.0.0-SNAPSHOT</version>
 
     <build>
         <sourceDirectory>${basedir}/src</sourceDirectory>
         <testSourceDirectory>${basedir}/test</testSourceDirectory>
-        <outputDirectory>${basedir}/out/production</outputDirectory>
-        <testOutputDirectory>${basedir}/out/test</testOutputDirectory>
-        <directory>${basedir}/out</directory>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

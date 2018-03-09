@@ -1,13 +1,13 @@
-package com.primeaeterna.callosum;
+package com.primeaeterna.callosum.server;
 
 import java.util.Optional;
 import java.util.Queue;
 
 /**
- * The slot manager keeps track of available slots and when asked for next
+ * The slots manager keeps track of available slots. When asked for next
  * available slot it will always return the lowest available slot.
  */
-public class ServerSlots
+public class Slots
 {
     private int nextSlot = -1;
     private Queue<Integer> minQueue = new PriorityBlockingUniqueQueue<Integer>((a, b) -> a - b);
