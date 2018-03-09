@@ -1,2 +1,0 @@
-module com.primeaeterna.callosum {
-}
