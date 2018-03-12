@@ -2,15 +2,18 @@ package com.primeaeterna.callosum.server;
 
 import java.util.Optional;
 import java.util.Queue;
+import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The slots manager keeps track of available slots. When asked for next
- * available slot it will always return the lowest available slot.
+ * available slot it will always return the lowest available slot starting
+ * with zero.
  */
 public class Slots
 {
-    private int nextSlot = -1;
-    private Queue<Integer> minQueue = new PriorityBlockingUniqueQueue<Integer>((a, b) -> a - b);
+    private AtomicInteger nextSlot = new AtomicInteger(-1);
+    private Queue<Integer> minQueue = new PriorityBlockingQueue<Integer>();
 
     /**
      * @return next available slot
@@ -18,23 +21,19 @@ public class Slots
     public int next()
     {
         return Optional.ofNullable(this.minQueue.poll())
-                       .orElseGet(() -> ++this.nextSlot);
+                       .orElseGet(() -> this.nextSlot.addAndGet(1));
     }
 
     /**
      * Returns a previously retrieved slot back to the pool.
      *
-     * @param slot slot to return
+     * No domain or uniqueness checks are necessary as long as the previously
+     * retrieved slot has been treated as an immutable opaque token.
      *
-     * @throws {@link InvalidSlot} if the slot number is greater than the
-     *                largest slot number allotted so far
+     * @param slot slot to return
      */
     public void put(int slot)
     {
-        if (slot > this.nextSlot || slot < 0)
-        {
-            throw new InvalidSlot(slot);
-        }
-        this.minQueue.add(slot);
+        this.minQueue.offer(slot);
     }
 }

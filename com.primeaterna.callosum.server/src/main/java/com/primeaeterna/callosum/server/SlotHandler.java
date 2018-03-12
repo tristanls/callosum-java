@@ -1,6 +1,7 @@
 package com.primeaeterna.callosum.server;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
@@ -8,9 +9,11 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
  * The slot handler is responsible for responding to any TCP connection by
  * providing a slot number followed by {@code \r\n}
  */
+@ChannelHandler.Sharable
 public class SlotHandler extends ChannelInboundHandlerAdapter
 {
-    private static byte[] CRLF = new byte[] { '\r', '\n' };
+
+    private static byte[] CRLF = "\r\n".getBytes();
     private Slots slots;
 
     /**
@@ -30,8 +33,9 @@ public class SlotHandler extends ChannelInboundHandlerAdapter
     public void channelActive(final ChannelHandlerContext ctx)
     {
         final int slot = this.slots.next();
-        final ByteBuf msg = ctx.alloc().buffer(6); // int + \r\n
-        msg.writeInt(slot);
+        byte[] slotBytes = String.valueOf(slot).getBytes();
+        final ByteBuf msg = ctx.alloc().buffer(slotBytes.length + 2); // int + \r\n
+        msg.writeBytes(slotBytes);
         msg.writeBytes(CRLF);
 
         ctx.channel().closeFuture().addListener((future) -> this.slots.put(slot));
