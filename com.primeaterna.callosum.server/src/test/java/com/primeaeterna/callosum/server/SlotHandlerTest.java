@@ -11,10 +11,13 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -29,7 +32,7 @@ public class SlotHandlerTest
     }
 
     @Test
-    public void slotHandlerRespondsWithZeroSlotOnFirstConnection() throws InterruptedException, IOException
+    public void slotHandlerRespondsWithZeroSlotOnFirstConnection() throws InterruptedException
     {
         final AtomicReference<AssertionError> failure = new AtomicReference<>();
         final SlotHandler slotHandler = new SlotHandler();
@@ -104,10 +107,11 @@ public class SlotHandlerTest
     }
 
     @Test
-    public void slotHandlerRespondsWithDifferentSlotsToConcurrentClients() throws InterruptedException
+    public void slotHandlerRespondsWithDifferentSlotsToConcurrentClientsAndAllSlotsAreReturned() throws InterruptedException
     {
-        final AtomicReference<AssertionError> failure = new AtomicReference<>();
-        final SlotHandler slotHandler = new SlotHandler();
+        final int numOfClients = 1000;
+        final Slots slots = new Slots();
+        final SlotHandler slotHandler = new SlotHandler(slots);
         final EventLoopGroup bossGroup = new NioEventLoopGroup();
         final EventLoopGroup workerGroup = new NioEventLoopGroup();
         final EventLoopGroup clientGroup = new NioEventLoopGroup();
@@ -123,21 +127,18 @@ public class SlotHandlerTest
                      ch.pipeline().addLast(slotHandler, new ChannelInboundHandlerAdapter()
                      {
                          @Override
-                         public void channelActive(final ChannelHandlerContext ctx) throws InterruptedException
-                         {
-                             Thread.sleep(1000);
-                         }
+                         public void channelActive(final ChannelHandlerContext ctx) {}
                      });
                  }
              });
 
-            ChannelFuture serv = b.bind(new LocalAddress("test")).sync();
+            ChannelFuture srv = b.bind(new LocalAddress("test")).sync();
 
             final List<ChannelFuture> clients = new LinkedList<>();
-            final Map<String, Boolean> expectedSlots = new HashMap<>();
-            final List<ChannelHandlerContext> ctxs = new LinkedList<>();
-            final CountDownLatch latch = new CountDownLatch(3);
-            for (String id : List.of("0", "1", "2"))
+            final Map<String, Boolean> expectedSlots = new ConcurrentHashMap<>();
+            final Queue<ChannelHandlerContext> ctxs = new ConcurrentLinkedQueue<>();
+            final CountDownLatch latch = new CountDownLatch(numOfClients);
+            for (int id = 0; id < numOfClients; id++)
             {
                 Bootstrap c = new Bootstrap();
                 c.group(clientGroup)
@@ -145,40 +146,24 @@ public class SlotHandlerTest
                  .handler(new ChannelInitializer<>()
                  {
                      @Override
-                     protected void initChannel(final Channel ch) throws Exception
+                     protected void initChannel(final Channel ch)
                      {
-                         ch.pipeline().addLast(new ByteToMessageDecoder()
+                         ch.pipeline().addLast(new ChannelInboundHandlerAdapter()
                          {
                              @Override
-                             protected void decode(final ChannelHandlerContext ctx, final ByteBuf in, final List<Object> out) throws Exception
+                             public void channelRead(final ChannelHandlerContext ctx, final Object msg)
                              {
-                                 try
-                                 {
-                                     synchronized (expectedSlots)
-                                     {
-                                         expectedSlots.put(asString(in, in.readableBytes()), true);
-                                     }
-                                 }
-                                 catch (AssertionError cause)
-                                 {
-                                     failure.set(cause);
-                                 }
-                                 finally
-                                 {
-                                     ctxs.add(ctx);
-                                     latch.countDown();
-                                 }
+                                 final ByteBuf b = (ByteBuf) msg;
+                                 expectedSlots.put(asString(b, b.readableBytes()), true);
+                                 ctxs.add(ctx);
+                                 latch.countDown();
                              }
                          });
                      }
                  });
-                clients.add(c.connect(serv.channel().localAddress()));
+                clients.add(c.connect(srv.channel().localAddress()));
             }
             latch.await();
-            for (String id : List.of("0", "1", "2"))
-            {
-                assertTrue(expectedSlots.containsKey(id + "\r\n"), id + "\r\n");
-            }
             for (ChannelHandlerContext ctx : ctxs)
             {
                 ctx.close();
@@ -187,16 +172,20 @@ public class SlotHandlerTest
             {
                 client.channel().closeFuture().sync();
             }
+            for (int id = 0; id < numOfClients; id++)
+            {
+                assertTrue(expectedSlots.containsKey(String.valueOf(id) + "\r\n"), String.valueOf(id));
+            }
+            for (int slot = 0; slot < numOfClients; slot++)
+            {
+                assertEquals(slots.next(), slot);
+            }
         }
         finally
         {
             clientGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
             bossGroup.shutdownGracefully();
-        }
-        if (failure.get() != null)
-        {
-            throw failure.get();
         }
     }
 }

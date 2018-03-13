@@ -21,8 +21,17 @@ public class SlotHandler extends ChannelInboundHandlerAdapter
      */
     public SlotHandler()
     {
+        this(new Slots());
+    }
+
+    /**
+     * Creates a new @{link SlotHandler} with provided slot tracking.
+     * @param slots slot tracker
+     */
+    public SlotHandler(Slots slots)
+    {
         super();
-        this.slots = new Slots();
+        this.slots = slots;
     }
 
     /**
