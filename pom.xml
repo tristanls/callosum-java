@@ -22,7 +22,8 @@
     </properties>
 
     <modules>
-        <module>com.primeaterna.callosum.server</module>
+        <module>com.primeaeterna.callosum.client</module>
+        <module>com.primeaeterna.callosum.server</module>
     </modules>
 
     <dependencies>
