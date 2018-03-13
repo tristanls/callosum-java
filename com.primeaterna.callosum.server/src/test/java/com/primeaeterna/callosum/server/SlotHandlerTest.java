@@ -176,9 +176,10 @@ public class SlotHandlerTest
             {
                 assertTrue(expectedSlots.containsKey(String.valueOf(id) + "\r\n"), String.valueOf(id));
             }
+            Thread.sleep(100); // give all close listeners opportunity to return slots
             for (int slot = 0; slot < numOfClients; slot++)
             {
-                assertEquals(slots.next(), slot);
+                assertEquals(slot, slots.next());
             }
         }
         finally
